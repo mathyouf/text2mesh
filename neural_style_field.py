@@ -46,6 +46,7 @@ class NeuralStyleField(nn.Module):
         super(NeuralStyleField, self).__init__()
         # The progressive encoding which is of size 3D
         self.pe = ProgressiveEncoding(mapping_size=width, T=niter, d=input_dim)
+        # clamp = None
         self.clamp = clamp
         self.normclamp = normclamp
         self.normratio = normratio

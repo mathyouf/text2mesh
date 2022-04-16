@@ -99,6 +99,8 @@ def run_branched(args):
     else:
         curcrop = args.normmaxcrop
     normaugment_transform = transforms.Compose([
+        # 10% crops on the renders
+        # Enforces texture/deform scale/density regularity
         transforms.RandomResizedCrop(224, scale=(curcrop, curcrop)),
         transforms.RandomPerspective(fill=1, p=0.8, distortion_scale=0.5),
         clip_normalizer
@@ -125,6 +127,7 @@ def run_branched(args):
     input_dim = 6 if args.input_normals else 3
     if args.only_z:
         input_dim = 1
+    # 
     mlp = NeuralStyleField(args.sigma, args.depth, args.width, 'gaussian', args.colordepth, args.normdepth,
                                 args.normratio, args.clamp, args.normclamp, niter=args.n_iter,
                                 progressive_encoding=args.pe, input_dim=input_dim, exclude=args.exclude).to(device)
