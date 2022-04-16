@@ -48,9 +48,12 @@ class NeuralStyleField(nn.Module):
         self.pe = ProgressiveEncoding(mapping_size=width, T=niter, d=input_dim)
         # clamp = None
         self.clamp = clamp
+        # normclamp = None
         self.normclamp = normclamp
+        # normratio = 0.1
         self.normratio = normratio
         layers = []
+        # True
         if encoding == 'gaussian':
             layers.append(FourierFeatureTransform(input_dim, width, sigma, exclude))
             if progressive_encoding:
