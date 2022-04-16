@@ -10,27 +10,41 @@ class ProgressiveEncoding(nn.Module):
     def __init__(self, mapping_size, T, d=3, apply=True):
         super(ProgressiveEncoding, self).__init__()
         self._t = 0
+        # self.n = 256 (from pixel width)
         self.n = mapping_size
+        # self.T = Number of Iterations (niter)
         self.T = T
+        # self.d = 3 (Number of dimensions? (RGB?))
         self.d = d
+        # 2 x 256 (iamge width) / 6000 (niter) = 0.0853
+        # self._tau = 0.0853
         self._tau = 2 * self.n / self.T
+        # Indicies for each pixel in the image_width
+        # self.indices.size = (256)
         self.indices = torch.tensor([i for i in range(self.n)], device=device)
         self.apply = apply
     def forward(self, x):
+        ###    alpha is the only thing changing each iteration   ###
+        # _t=1, indices=1 => 11.5 => 1
+        # _t=5000, indices=100 => 624990 => 1
+        # No clue why alpha is always 1 (wtf)
         alpha = ((self._t - self._tau * self.indices) / self._tau).clamp(0, 1).repeat(
             2)  # no need to reduce d or to check cases
         if not self.apply:
             alpha = torch.ones_like(alpha, device=device)  ## this layer means pure ffn without progress.
+        # A bunch of ones in 3 dimensions???
+        ### alpha only affects the values of the 3d torch tensor ###
         alpha = torch.cat([torch.ones(self.d, device=device), alpha], dim=0)
         self._t += 1
         return x * alpha
 
-
+# Neural Network Module - Transforms the base Mesh (which could be of any starting type: Horse, Car, Cacatus)
 class NeuralStyleField(nn.Module):
     # Same base then split into two separate modules 
     def __init__(self, sigma, depth, width, encoding, colordepth=2, normdepth=2, normratio=0.1, clamp=None,
                  normclamp=None,niter=6000, input_dim=3, progressive_encoding=True, exclude=0):
         super(NeuralStyleField, self).__init__()
+        # The progressive encoding which is of size 3D
         self.pe = ProgressiveEncoding(mapping_size=width, T=niter, d=input_dim)
         self.clamp = clamp
         self.normclamp = normclamp

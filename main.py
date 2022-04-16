@@ -1,5 +1,6 @@
 import clip
 from tqdm import tqdm
+# Kaolin as Differentiable Renderer
 import kaolin.ops.mesh
 import kaolin as kal
 import torch
@@ -51,10 +52,17 @@ def run_branched(args):
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
-    render = Renderer()
-    mesh = Mesh(args.obj_path)
-    MeshNormalizer(mesh)()
+    ### Kaolin DIB-R (Differentiable Renderer)
+    # Default Image Size: 224x224
 
+    # Create the Kaolin DIB-R Renderer - https://kaolin.readthedocs.io/en/latest/modules/kaolin.render.mesh.html#kaolin.render.mesh.dibr_rasterization
+    render = Renderer()
+    # The Base Mesh that is deformed, with kal.io.obj.import_mesh() - https://kaolin.readthedocs.io/en/latest/modules/kaolin.io.obj.html
+    # This mesh initializes with an all Blue texture map
+    mesh = Mesh(args.obj_path)
+    # Normalizes mesh (scales and centers)
+    MeshNormalizer(mesh)()
+    # What is prior_color ? - Seems to be grey
     prior_color = torch.full(size=(mesh.faces.shape[0], 3, 3), fill_value=0.5, device=device)
 
     background = None
@@ -66,8 +74,10 @@ def run_branched(args):
 
     n_augs = args.n_augs
     dir = args.output_dir
+    # Normalization vectors (constants) set empirically. The model is found to be robust to slightly different normalization constants - https://github.com/openai/CLIP/issues/20
+    # Noramlize(mean, std_dev) - Normalization Intuition: https://discuss.pytorch.org/t/how-does-torchvision-transforms-normalize-work/57670
     clip_normalizer = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-    # CLIP Transform
+    # CLIP Transform - List of transforms to apply to an input image (rendered_images)
     clip_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         clip_normalizer
@@ -75,8 +85,11 @@ def run_branched(args):
 
     # Augmentation settings
     augment_transform = transforms.Compose([
+        # This doesn't seem to be cropping at all - Crop a bit and then resize back to 224
         transforms.RandomResizedCrop(224, scale=(1, 1)),
+        # Does a bit of a rotation/angling of an render - Why do this when you can already get every 3D angle???
         transforms.RandomPerspective(fill=1, p=0.8, distortion_scale=0.5),
+        # Re-normalize augmented images to CLIP Norm Constants
         clip_normalizer
     ])
 

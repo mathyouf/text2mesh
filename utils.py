@@ -94,7 +94,9 @@ def normalize_mesh(mesh):
 def get_texture_map_from_color(mesh, color, H=224, W=224):
     num_faces = mesh.faces.shape[0]
     texture_map = torch.zeros(1, H, W, 3).to(device)
+    # texture_map = [[[0.0, 0.0, 1.0]...]...] => All Blue HxW Texture Map
     texture_map[:, :, :] = color
+    # Reorders to shape (1, 3, H, W)
     return texture_map.permute(0, 3, 1, 2)
 
 

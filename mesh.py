@@ -9,12 +9,14 @@ import PIL
 class Mesh():
     def __init__(self,obj_path,color=torch.tensor([0.0,0.0,1.0])):
         if ".obj" in obj_path:
+            # Create Kaolin Mesh
             mesh = kal.io.obj.import_mesh(obj_path, with_normals=True)
         elif ".off" in obj_path:
             mesh = kal.io.off.import_mesh(obj_path)
         else:
             raise ValueError(f"{obj_path} extension not implemented in mesh reader.")
         self.vertices = mesh.vertices.to(device)
+        # (torch.LongTensor): of shape (num_faces, face_size)
         self.faces = mesh.faces.to(device)
         self.vertex_normals = None
         self.face_normals = None
@@ -36,7 +38,7 @@ class Mesh():
 
                 # Normalize
                 self.face_normals = torch.nn.functional.normalize(self.face_normals)
-
+        # color = [0.0, 0.0, 1.0] => Blue
         self.set_mesh_color(color)
 
     def standardize_mesh(self,inplace=False):
@@ -55,7 +57,9 @@ class Mesh():
         return mesh
 
     def set_mesh_color(self,color):
+        # (1, 3, H, W) Texture Map (All Blue [0.0, 0.0, 1.0])
         self.texture_map = utils.get_texture_map_from_color(self,color)
+        # (1, n_faces (~1000?), 3, 3)  ### What are face attributes???
         self.face_attributes = utils.get_face_attributes_from_color(self,color)
 
     def set_image_texture(self,texture_map,inplace=True):
