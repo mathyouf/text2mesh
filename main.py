@@ -127,20 +127,26 @@ def run_branched(args):
     input_dim = 6 if args.input_normals else 3
     if args.only_z:
         input_dim = 1
-    # 
+    # Get Neural Style network, the thing that learns to create the target mesh
     mlp = NeuralStyleField(args.sigma, args.depth, args.width, 'gaussian', args.colordepth, args.normdepth,
                                 args.normratio, args.clamp, args.normclamp, niter=args.n_iter,
                                 progressive_encoding=args.pe, input_dim=input_dim, exclude=args.exclude).to(device)
     mlp.reset_weights()
-
+    # Setup the optimzier to calcualte gradients and backpropogate them for the parameters of MLP (multilayer perceptron)
     optim = torch.optim.Adam(mlp.parameters(), args.learning_rate, weight_decay=args.decay)
     activate_scheduler = args.lr_decay < 1 and args.decay_step > 0 and not args.lr_plateau
     if activate_scheduler:
         lr_scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=args.decay_step, gamma=args.lr_decay)
+    # args.no_prompt = False => Resolves True
     if not args.no_prompt:
+        # True - Default: 'a pig with pants'
         if args.prompt:
+            # 'a   p i g   w i t h   p a n t s'
             prompt = ' '.join(args.prompt)
+            # Tokenize the above string
             prompt_token = clip.tokenize([prompt]).to(device)
+            # From: clip_model, preprocess = clip.load('ViT-B/32', device, jit=False)
+            # ViT - Vision Transformer
             encoded_text = clip_model.encode_text(prompt_token)
 
             # Save prompt
@@ -149,6 +155,7 @@ def run_branched(args):
 
             # Same with normprompt
             norm_encoded = encoded_text
+    # args.normprompt = None - Resolves False
     if args.normprompt is not None:
         prompt = ' '.join(args.normprompt)
         prompt_token = clip.tokenize([prompt]).to(device)
@@ -158,6 +165,7 @@ def run_branched(args):
         with open(os.path.join(dir, f"NORM {prompt}"), "w") as f:
             f.write("")
 
+    # Uses image vector from CLIP as TARGET rather than Text Input
     if args.image:
         img = Image.open(args.image)
         img = preprocess(img).to(device)
@@ -169,18 +177,25 @@ def run_branched(args):
     vertices = copy.deepcopy(mesh.vertices)
     network_input = copy.deepcopy(vertices)
     if args.symmetry == True:
+        # network_input.size (n_verts, 3) -> 3 = [x,y,z]
+        # Make them symmetrical along the z axis
         network_input[:,2] = torch.abs(network_input[:,2])
 
     if args.standardize == True:
         # Each channel into z-score
         network_input = (network_input - torch.mean(network_input, dim=0))/torch.std(network_input, dim=0)
 
+    ### Now we start descending the iteratively (i) calculated gradients!!! - https://en.wikipedia.org/wiki/Gradient_descent ###
     for i in tqdm(range(args.n_iter)):
         optim.zero_grad()
 
         sampled_mesh = mesh
-
+        ### Updates sampled_mesh directly ###
+        # pred_rgb, pred_normal = mlp(network_input)
+        # sampled_mesh.face_attributes = prior_color + kaolin.ops.mesh.index_vertices_by_faces(pred_rgb.unsqueeze(0),sampled_mesh.faces)
+        # sampled_mesh.vertices = vertices + sampled_mesh.vertex_normals * pred_normal
         update_mesh(mlp, network_input, prior_color, sampled_mesh, vertices)
+        ### Renders images from the sampled_mesh ###
         rendered_images, elev, azim = render.render_front_views(sampled_mesh, num_views=args.n_views,
                                                                 show=args.show,
                                                                 center_azim=args.frontview_center[0],
@@ -417,17 +432,24 @@ def save_rendered_results(args, dir, final_color, mesh):
 
 
 def update_mesh(mlp, network_input, prior_color, sampled_mesh, vertices):
+    # Get the updated RGB and Normal distances from the Neural Style Field
     pred_rgb, pred_normal = mlp(network_input)
+    # Update the mesh with the new color
     sampled_mesh.face_attributes = prior_color + kaolin.ops.mesh.index_vertices_by_faces(
         pred_rgb.unsqueeze(0),
         sampled_mesh.faces)
+    # Update the mesh with the new normal
+    # Add to the vertex the normal matrix multiplied by the pred_normal
     sampled_mesh.vertices = vertices + sampled_mesh.vertex_normals * pred_normal
+    # Normalize it (Scale + Center)
     MeshNormalizer(sampled_mesh)()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    ### Users should be able to change this by selecting different objects ###
     parser.add_argument('--obj_path', type=str, default='meshes/mesh1.obj')
+    ### Users should be able to change this by entering different prompts ###
     parser.add_argument('--prompt', nargs="+", default='a pig with pants')
     parser.add_argument('--normprompt', nargs="+", default=None)
     parser.add_argument('--promptlist', nargs="+", default=None)

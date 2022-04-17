@@ -53,8 +53,10 @@ class NeuralStyleField(nn.Module):
         # normratio = 0.1
         self.normratio = normratio
         layers = []
+        ## We create the Neural Style (Ns) Layers
         # True
         if encoding == 'gaussian':
+            # Allows higher frequency details
             layers.append(FourierFeatureTransform(input_dim, width, sigma, exclude))
             if progressive_encoding:
                 layers.append(self.pe)
@@ -68,18 +70,21 @@ class NeuralStyleField(nn.Module):
             layers.append(nn.ReLU())
         self.base = nn.ModuleList(layers)
 
-        # Branches 
-        color_layers = []
+        ## We create the branches which output to transform the Mesh, before the rendering ##
+        color_layers = [] #Nc - (Color RGB  Texture)
         for _ in range(colordepth):
             color_layers.append(nn.Linear(width, width))
             color_layers.append(nn.ReLU())
+        # color_layers.size = (256, 3)
         color_layers.append(nn.Linear(width, 3))
         self.mlp_rgb = nn.ModuleList(color_layers)
 
-        normal_layers = []
+        normal_layers = [] #Nd - (Distance in Normal Direction)
         for _ in range(normdepth):
             normal_layers.append(nn.Linear(width, width))
             normal_layers.append(nn.ReLU())
+        # One dimensional distance in normal direction
+        # normal_layers.size (256, 1)
         normal_layers.append(nn.Linear(width, 1))
         self.mlp_normal = nn.ModuleList(normal_layers)
 
@@ -94,15 +99,19 @@ class NeuralStyleField(nn.Module):
         self.mlp_normal[-1].bias.data.zero_()
 
     def forward(self, x):
+        # Positional Encoding (self.pe) -> Ns (Neural Style)
         for layer in self.base:
             x = layer(x)
+        # Add the Nc (color layers)
         colors = self.mlp_rgb[0](x)
         for layer in self.mlp_rgb[1:]:
             colors = layer(colors)
+        # Add the Nd (normal distance layers)
         displ = self.mlp_normal[0](x)
         for layer in self.mlp_normal[1:]:
             displ = layer(displ)
 
+        # Both tanh by default #
         if self.clamp == "tanh":
             colors = F.tanh(colors) / 2
         elif self.clamp == "clamp":
@@ -111,7 +120,8 @@ class NeuralStyleField(nn.Module):
             displ = F.tanh(displ) * self.normratio
         elif self.normclamp == "clamp":
             displ = torch.clamp(displ, -self.normratio, self.normratio)
-
+        
+        # Return colors and displacement (to be applied to mesh)
         return colors, displ
 
 
