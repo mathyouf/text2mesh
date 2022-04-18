@@ -9,6 +9,7 @@
 ### Installation
 
 **Note:** Run on this GPU with this Docker container for the below conda env to work out of the box.
+
 <img width="50%" src="images/vastai.png" />
 
 [Vast.ai](https://vast.ai/)
@@ -23,6 +24,8 @@ System requirements
 - CUDA 10.2
 - GPU w/ minimum 8 GB ram
 
+### Architecture
+<img width="50%" src="images/pipeline.jpeg" />
 
 ### Run examples
 Call the below shell scripts to generate example styles. 
