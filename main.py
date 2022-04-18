@@ -141,7 +141,7 @@ def run_branched(args):
     if not args.no_prompt:
         # True - Default: 'a pig with pants'
         if args.prompt:
-            # 'a   p i g   w i t h   p a n t s'
+            # ['a pig with pants', 'sakura tree island'] => 'a pig with pants sakura tree island'
             prompt = ' '.join(args.prompt)
             # Tokenize the above string
             prompt_token = clip.tokenize([prompt]).to(device)
@@ -220,15 +220,22 @@ def run_branched(args):
                 clip_normalizer
             ])
 
+        # We calculate loss based on the augmentations
         if n_augs > 0:
             loss = 0.0
             for _ in range(n_augs):
+                # Create Augmented Images - Question: how many rendered images?
                 augmented_image = augment_transform(rendered_images)
+                # Create CLIP encodings of the augmented images
                 encoded_renders = clip_model.encode_image(augmented_image)
                 if not args.no_prompt:
                     if args.prompt:
                         if args.clipavg == "view":
+                            # encoded_text.shape[0] = ???
                             if encoded_text.shape[0] > 1:
+                                # Get the cosine similarity between: The mean of the encoded renders and the mean of the encoded text
+                                etsize = encoded_text.size()
+                                print(f'encoded_text: {encoded_text} {etsize}')
                                 loss -= torch.cosine_similarity(torch.mean(encoded_renders, dim=0),
                                                                 torch.mean(encoded_text, dim=0), dim=0)
                             else:
