@@ -442,7 +442,7 @@ def update_mesh(mlp, network_input, prior_color, sampled_mesh, vertices):
     # Add to the vertex the normal matrix multiplied by the pred_normal
     a = sampled_mesh.vertices.size()
     b = vertices.size()
-    c = sampled_mesh.vertex_normals()
+    c = sampled_mesh.vertex_normals.size()
     print(f'sampled_mesh.vertices: {a}, - vertices: {b} - sampled_mesh.vertex_normals: {c}')
     sampled_mesh.vertices = vertices + sampled_mesh.vertex_normals * pred_normal
     # Normalize it (Scale + Center)
