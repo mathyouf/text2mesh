@@ -107,3 +107,6 @@ The outputs will be saved to `results/demo`, with the stylized .obj files, color
     year  = {2021}
 }
 ```
+
+## Research Directions
+[Sculpting With Words](https://www.morphogen.io/research/sculpting_with_words.pdf)
