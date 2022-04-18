@@ -10,16 +10,15 @@ class ProgressiveEncoding(nn.Module):
     def __init__(self, mapping_size, T, d=3, apply=True):
         super(ProgressiveEncoding, self).__init__()
         self._t = 0
-        # self.n = 256 (from pixel width)
+        # self.n = 256
         self.n = mapping_size
         # self.T = Number of Iterations (niter)
         self.T = T
         # self.d = 3 (Number of dimensions? (RGB?))
         self.d = d
-        # 2 x 256 (iamge width) / 6000 (niter) = 0.0853
+        # 2 x 256 / 6000 (niter) = 0.0853
         # self._tau = 0.0853
         self._tau = 2 * self.n / self.T
-        # Indicies for each pixel in the image_width
         # self.indices.size = (256)
         self.indices = torch.tensor([i for i in range(self.n)], device=device)
         self.apply = apply
