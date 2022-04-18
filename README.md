@@ -1,13 +1,17 @@
 # Text2Mesh [[Project Page](https://threedle.github.io/text2mesh/)]
 [![arXiv](https://img.shields.io/badge/arXiv-Text2Mesh-b31b1b.svg)](https://arxiv.org/abs/2112.03221)
 ![Pytorch](https://img.shields.io/badge/PyTorch->=1.9.0-Red?logo=pytorch)
-![crochet candle](images/vases.gif)
+<!-- ![crochet candle](images/vases.gif) -->
+<img src="images/flower7_iter_1400.jpg">
 **Text2Mesh** is a method for text-driven stylization of a 3D mesh, as described in "Text2Mesh: Text-Driven Neural Stylization for Meshes" (forthcoming).
 
 ## Getting Started
 ### Installation
 
-**Note:** The below installation will fail if run on something other than a CUDA GPU machine.
+**Note:** Run on this GPU with this Docker container for the below conda env to work out of the box.
+<img width="50%" src="images/vastai.png" />
+
+[Vast.ai](https://vast.ai/)
 ```
 conda env create --file text2mesh.yml
 conda activate text2mesh
