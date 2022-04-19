@@ -1,4 +1,8 @@
 # Text2Mesh [[Project Page](https://threedle.github.io/text2mesh/)]
+
+[Visualization](https://mathyouf.github.io/text2mesh/)
+
+
 [![arXiv](https://img.shields.io/badge/arXiv-Text2Mesh-b31b1b.svg)](https://arxiv.org/abs/2112.03221)
 ![Pytorch](https://img.shields.io/badge/PyTorch->=1.9.0-Red?logo=pytorch)
 <!-- ![crochet candle](images/vases.gif) -->
