@@ -10,10 +10,10 @@
             "request": "launch",
             "program": "/root/text2mesh/main.py",
             "console": "integratedTerminal",
-            "args": ["--run branch", 
+            "args": [   "--run", "branch", 
                         "--obj_path", "data/source_meshes/vase.obj", 
                         "--output_dir", "results/demo/vase/wicker", 
-                        "--prompt", "an image of a vase made of wicker", 
+                        "--prompt", "[\"unreal engine render\", \"an serene waterfall\"]", 
                         "--sigma", "5.0",
                         "--clamp", "tanh",
                         "--n_normaugs", "4",
@@ -32,11 +32,11 @@
                         "--maxcrop", "1.0",
                         "--save_render",
                         "--seed", "131", 
-                        "--n_iter", "1500",
+                        "--n_iter", "300",
                         "--learning_rate", "0.0005",
                         "--normal_learning_rate", "0.0005",
-                        "--background", "1 1 1",
-                        "--frontview_center", "1.96349 0.6283"],
+                        "--background", "1", "1", "1",
+                        "--frontview_center", "1.96349", "0.6283"],
             "justMyCode": true
         }
     ]

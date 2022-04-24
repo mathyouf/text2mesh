@@ -143,7 +143,7 @@ def run_branched(args):
         if args.prompt:
             # ['a pig with pants', 'sakura tree island'] => 'a pig with pants sakura tree island'
             prompt = ' '.join(args.prompt)
-            # Tokenize the above string
+            # Tokenize the above string - prompt_token.Size = [1, 77]
             prompt_token = clip.tokenize([prompt]).to(device)
             # From: clip_model, preprocess = clip.load('ViT-B/32', device, jit=False)
             # ViT - Vision Transformer
@@ -203,7 +203,7 @@ def run_branched(args):
                                                                 std=args.frontview_std,
                                                                 return_views=True,
                                                                 background=background)
-
+        # n_augs == 1
         if n_augs == 0:
             clip_image = clip_transform(rendered_images)
             encoded_renders = clip_model.encode_image(clip_image)
@@ -224,14 +224,15 @@ def run_branched(args):
         if n_augs > 0:
             loss = 0.0
             for _ in range(n_augs):
-                # Create Augmented Images - Question: how many rendered images?
+                # Create Augmented Images (same as rendered_images (5))
                 augmented_image = augment_transform(rendered_images)
                 # Create CLIP encodings of the augmented images
                 encoded_renders = clip_model.encode_image(augmented_image)
+                # This resolves True (because there is NOT no prompt)
                 if not args.no_prompt:
                     if args.prompt:
                         if args.clipavg == "view":
-                            # encoded_text.shape[0] = ???
+                            # If we have more than one prompt
                             if encoded_text.shape[0] > 1:
                                 # Get the cosine similarity between: The mean of the encoded renders and the mean of the encoded text
                                 etsize = encoded_text.size()
