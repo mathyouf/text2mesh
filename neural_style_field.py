@@ -66,7 +66,6 @@ class NeuralStyleField(nn.Module):
             layers.append(nn.ReLU())
         for i in range(depth):
             layers.append(nn.Linear(width, width))
-            layers.append(nn.Linear(width, width))
             layers.append(nn.ReLU())
         self.base = nn.ModuleList(layers)
 

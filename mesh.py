@@ -7,7 +7,7 @@ import numpy as np
 import PIL
 
 class Mesh():
-    def __init__(self,obj_path,color=torch.tensor([0.0,0.0,1.0])):
+    def __init__(self,obj_path,color=torch.tensor([0.0,0.0,0.0])):
         if ".obj" in obj_path:
             # Create Kaolin Mesh
             mesh = kal.io.obj.import_mesh(obj_path, with_normals=True)
@@ -84,8 +84,9 @@ class Mesh():
         mesh.face_uvs = new_face_uvs
         return mesh
 
-    def export(self, file, color=None):
+    def export(self, file, color=None):            
         with open(file, "w+") as f:
+            # Iterate through each vertex
             for vi, v in enumerate(self.vertices):
                 if color is None:
                     f.write("v %f %f %f\n" % (v[0], v[1], v[2]))

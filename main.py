@@ -20,6 +20,7 @@ from PIL import Image
 import argparse
 from pathlib import Path
 from torchvision import transforms
+import numpy as np
 
 def run_branched(args):
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
@@ -356,6 +357,7 @@ def run_branched(args):
                 normweight *= args.cropdecay
 
         if i % 100 == 0:
+            hq_renders = 
             report_process(args, dir, i, loss, loss_check, losses, rendered_images)
 
     export_final_results(args, dir, losses, mesh, mlp, network_input, vertices)
@@ -363,7 +365,15 @@ def run_branched(args):
 
 def report_process(args, dir, i, loss, loss_check, losses, rendered_images):
     print('iter: {} loss: {}'.format(i, loss.item()))
-    torchvision.utils.save_image(rendered_images, os.path.join(dir, 'iter_{}.jpg'.format(i)))
+    # Re-render images at higher resolution
+    re_rendered_images, elev_re, azim_re = render.render_front_views(sampled_mesh, num_views=args.n_views,
+                                                        show=args.show,
+                                                        center_azim=args.frontview_center[0],
+                                                        center_elev=args.frontview_center[1],
+                                                        std=args.frontview_std,
+                                                        return_views=True,
+                                                        background=background)
+    torchvision.utils.save_image(re_rendered_images, os.path.join(dir, 'iter_{}.jpg'.format(i)))
     if args.lr_plateau and loss_check is not None:
         new_loss_check = np.mean(losses[-100:])
         # If avg loss increased or plateaued then reduce LR
@@ -388,9 +398,12 @@ def export_final_results(args, dir, losses, mesh, mlp, network_input, vertices):
         base_color = torch.full(size=(mesh.vertices.shape[0], 3), fill_value=0.5)
         final_color = torch.clamp(pred_rgb + base_color, 0, 1)
 
+        torchvision.utils.save_image(mesh.texture_map[0], os.path.join(dir, f"img1.png"))
+
         mesh.vertices = vertices.detach().cpu() + mesh.vertex_normals.detach().cpu() * pred_normal
 
         objbase, extension = os.path.splitext(os.path.basename(args.obj_path))
+
         mesh.export(os.path.join(dir, f"{objbase}_final.obj"), color=final_color)
 
         # Run renders

@@ -102,6 +102,7 @@ class Renderer():
         if background is not None:
             face_attributes = [
                 mesh.face_attributes,
+                # How does this add a white bg?
                 torch.ones((1, n_faces, 3, 1), device='cuda')
             ]
         else:
