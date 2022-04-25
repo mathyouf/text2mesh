@@ -357,7 +357,6 @@ def run_branched(args):
                 normweight *= args.cropdecay
 
         if i % 100 == 0:
-            hq_renders = 
             report_process(args, dir, i, loss, loss_check, losses, rendered_images)
 
     export_final_results(args, dir, losses, mesh, mlp, network_input, vertices)
